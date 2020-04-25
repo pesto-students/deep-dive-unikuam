@@ -1,13 +1,57 @@
-const sequentialPromise = promises => {
-  let promise = promises[0]();
-  for (let i = 1; i < promises.length; i++) {
-    if (typeof promises[i] !== 'function') {
-      throw new Error(`Expected array of functions as arguments, got ${typeof promises[i]}`)
-    }
-    promise = promise.then(promises[i]);
+let result = [];
+let promiseIndex = 0;
+let promiseArgs;
+let totalPromisesLength;
+let allPromises = [];
+
+const sequentialPromise = (promisesArray) => {
+  if (!Array.isArray(promisesArray)) {
+    throw new TypeError(`Expected an array of promises, got ${typeof promiseArray}`);
   }
-  return Promise.resolve(promise);
-};
+  totalPromisesLength = promisesArray.length;
+  allPromises = promisesArray;
+  let wrappedPromise = wrapIntoFunctionIfPromise(allPromises[promiseIndex]);
+  return resolveAllPromises(wrappedPromise, []); //it is not receiving anything here to return
+}
+
+function resolveAllPromises(promise, promiseArgs) {
+  return new Promise((resolve, reject) => {
+    promise(promiseArgs).then(
+      (res) => {
+        promiseArgs = res;
+        result.push(res);
+      },
+      (err) => {
+        promiseArgs = err;
+        result.push(err);
+      }
+    ).finally(() => {
+      try {
+        if (promiseIndex === (totalPromisesLength - 1)) {
+          // console.log(result); //result is showing correct here.
+          resolve(result); //here it should return promise with results
+        } else {
+          promiseIndex++;
+          let wrappedPromise = wrapIntoFunctionIfPromise(allPromises[promiseIndex]);
+          resolveAllPromises(wrappedPromise, promiseArgs);
+        }
+      } catch (error) {
+        reject(error);
+      }
+    });
+  });
+}
+
+function wrapIntoFunctionIfPromise(promise) {
+  let modifiedPromise;
+  if (typeof promise !== 'function' && promise instanceof Promise) {
+    modifiedPromise = () => promise;
+  } else {
+    modifiedPromise = promise;
+  }
+  return modifiedPromise;
+}
+
 export {
   sequentialPromise
 };
