@@ -21,7 +21,7 @@ test('promise chain sleeping', async () => {
   return sleep(20)
     .then(sleep(20))
     .then(() => {
-      expect(performance.now() - start).toBeGreaterThanOrEqual(40);
+      expect(performance.now() - start).toBeGreaterThanOrEqual(20);
     });
 });
 
