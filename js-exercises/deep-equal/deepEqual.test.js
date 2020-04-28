@@ -19,6 +19,7 @@ describe("deep equal testing", () => {
       expect(deepEqual('abc', 'abc')).toBe(true);
       expect(deepEqual(1, 1)).toBe(true);
       expect(deepEqual(1, 1, true)).toBe(true);
+      expect(deepEqual(null, {a: 1, b: 2})).toBe(false);
     });
   });
 
