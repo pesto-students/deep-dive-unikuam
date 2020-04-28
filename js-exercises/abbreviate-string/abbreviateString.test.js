@@ -16,6 +16,7 @@ describe('abbreviateString', () => {
     expect(() => abbreviateString({})).toThrow();
     expect(() => abbreviateString(null)).toThrow();
     expect(() => abbreviateString()).toThrow();
+    expect(() => abbreviateString('asc', ',', '..', 'qww')).toThrow();
   });
 
   it('should abbreviate single word if it is too long', () => {
