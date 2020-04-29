@@ -1,8 +1,8 @@
-let result = [];
-let promiseIndex = 0;
-let promiseArgs;
-let totalPromisesLength;
-let allPromises = [];
+const result = [];
+const promiseIndex = 0;
+const promiseArgs;
+const totalPromisesLength;
+const allPromises = [];
 
 const sequentialPromise = (promisesArray) => {
   if (!Array.isArray(promisesArray)) {
