@@ -11,14 +11,16 @@ function App() {
       <ModalReact
         toggleButtonId="modalReactButton"
         focusOnFirstElement
-        changeFocusOnTab
+        closeOnEscape
+        focusChangeOnTab
+        hideOnOverlayTouch
       >
       <label>First Name: </label>
-      <input type="text" name="firstname" value="" tabIndex="1" onChange={(e) => this.handleChange(e)}/>
+      <input type="text" name="firstname" value="" onChange={(e) => this.handleChange(e)}/>
       <label>Last Name: </label>
-      <input type="text" name="lastname" value="" tabIndex="2" onChange={(e) => this.handleChange(e)}/>
-      <a href="google.com" tabIndex="3"> click here </a>
-      <button tabIndex="4" >submit</button>
+      <input type="text" name="lastname" value="" onChange={(e) => this.handleChange(e)}/>
+      <a href="google.com"> click here </a>
+      <button >submit</button>
       </ModalReact>
       <button id="modalReactButton">Click Here</button>
     </div>

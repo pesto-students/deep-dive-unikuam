@@ -7,34 +7,41 @@ const p = data => {
   console.log(data);
 }
 
+const KEYCODE_TAB = 9;
+
 class ModalReact extends React.Component {
-  modalIdName = 'modalDialog';
+  modalDialog = 'modalDialog';
   modalClassName = 'modalReact';
   modalCloseClass = 'modalReactClose';
+  modalOverlay = 'modalOverlay';
 
   state = {
     close: false,
     toggleStatus: false,
   }
+
   componentDidMount() {
-    document.getElementById(this.props.toggleButtonId).addEventListener('click', (e) => this.toggleModal(e));
+    document.getElementById(this.props.toggleButtonId).addEventListener('click', (e) => this.closeModal(e));
   }
 
   componentWillUnmount() {
-    document.getElementById(this.props.toggleButtonId).removeEventListener('click', (e) => this.toggleModal(e));
+    document.getElementById(this.props.toggleButtonId).removeEventListener('click', (e) => this.closeModal(e));
   }
 
   componentDidUpdate() {
     if (this.props.focusOnFirstElement && this.state.close) {
       this.focusFirstElementInModal();
     }
-    if (this.props.changeFocusOnTab && this.state.close) {
-      this.changeFieldsOnTab();
-    }
+    this.addTabIndexAttribute();
   }
 
-  changeFieldsOnTab = () => {
-
+  addTabIndexAttribute = () => {
+    const focusable = this.getFocusableElements();
+    let i = 1;
+    for (const ele of focusable) {
+      ele.setAttribute('tabIndex', i);
+      i++;
+    }
   }
 
   focusFirstElementInModal = () => {
@@ -43,46 +50,59 @@ class ModalReact extends React.Component {
 
   getFocusableElements = () => {
     const focusableElements = "button:not([disabled]), a:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([disabled]):not([tabindex='-1'])";
-    const focusableElementsInModal = focusableElements.split(', ').map(el => `#${this.modalIdName} ${el}`).join(', ');
+    const focusableElementsInModal = focusableElements.split(', ').map(el => `#${this.modalDialog} ${el}`).join(', ');
     return document.querySelectorAll(focusableElementsInModal);
   }
 
-  toggleModal = (e) => {
+  closeModal = (e) => {
+    document.getElementById(this.props.toggleButtonId).focus();
     this.setState(() => ({
       toggleStatus: !this.state.toggleStatus,
       close: !this.state.close
     }));
   }
 
-  closeModal = (e) => {
-    this.setState(() => ({
-      close: !this.state.close,
-      toggleStatus: !this.state.toggleStatus,
-    }));
-  }
-
   handleKeyPress = (e) => {
-    if (e.key === 'Tab') {
+    const isTabPressed = (e.key === 'Tab' || e.keyCode === KEYCODE_TAB);
+    if (isTabPressed && this.props.focusChangeOnTab) {
       const focusable = [...this.getFocusableElements()];
       const focusIndex = focusable.indexOf(document.activeElement);
-      const tabIndex = focusable[focusIndex].getAttribute('tabIndex');
-      p(focusable);
-      if (tabIndex == focusable.length) {
-        focusable[0].focus();
+      if (e.shiftKey) {
+        if (document.activeElement === focusable[0]) {
+          focusable[focusable.length - 1].focus();
+        }
       } else {
-        if (focusable[focusIndex]) {
-          focusable[focusIndex].focus();
+        if (document.activeElement === focusable[focusable.length - 1]) {
+          console.log(focusable[0]);
+          focusable[0].focus();
         }
       }
+    }
+    if (e.key === "Escape" && this.props.closeOnEscape) {
+       this.closeModal();
+    }
+  }
+
+  handleDocumentClick = (event) => {
+    if (event.target.className === 'modalOverlay') {
+      this.closeModal();
+      document.removeEventListener("click", this.handleDocumentClick);
     }
   }
 
   render() {
-    if (!this.state.toggleStatus && !this.state.close) return null;
+    if (!this.state.toggleStatus && !this.state.close) {
+      return null;
+    }
+    if (this.props.hideOnOverlayTouch) {
+      document.addEventListener("click", this.handleDocumentClick, false);
+    }
     return (
-      <div className={this.modalClassName} id={this.modalIdName} tabIndex="0" onKeyDown={this.handleKeyPress}>
-        {this.props.children}
-        <button tabIndex="5" className={this.modalCloseClass} onClick={(e) => this.closeModal(e)}>close</button>
+      <div className={this.modalOverlay}>
+        <div className={this.modalClassName} id={this.modalDialog} tabIndex="0" onKeyDown={this.handleKeyPress}>
+          {this.props.children}
+          <button className={this.modalCloseClass} onClick={(e) => this.closeModal(e)}></button>
+        </div>
       </div>
     );
   }
