@@ -3,6 +3,7 @@ import '../css/ModalReactStyles.css';
 import PropTypes from "prop-types";
 import Header from './Header';
 import Footer from './Footer';
+import Resources from '../resources/resources';
 
 const KEYCODE_TAB = 9;
 const KEYCODE_ESC = 27;
@@ -32,7 +33,7 @@ class ModalReact extends React.Component {
 
   componentDidMount() {
     if (!this.props.toggleButtonId) {
-      throw new Error(`Button Id is required to show the modal, please provide a valid id in string format.`);
+      throw new Error(Resources.mandatory_model_trigger_element_id);
     } else {
       document.getElementById(this.props.toggleButtonId).addEventListener('click', this.toggleModal);
     }
@@ -61,7 +62,7 @@ class ModalReact extends React.Component {
 
   showAfterParticularTime = (showTime) => {
     if (!Number.isFinite(showTime)) {
-      throw new Error(`Expected the finite number for showPopupAgainAfter attribute, got invalid`);
+      throw new Error(Resources.error_finite_value_time_provided);
     }
     setTimeout(() => {
       this.closeModal();
@@ -83,7 +84,7 @@ class ModalReact extends React.Component {
     const focusable = this.getFocusableElements();
 
     if (tabIndex > focusable.length) {
-      throw new Error(`Provided index for default focus is greater than the number of available focusable elements. It should be equal or less than ${focusable.length}`);
+      throw new Error(Resources.focus_out_of_range `${focusable.length}`);
     }
     focusable[tabIndex - 1].focus();
   }
@@ -210,15 +211,15 @@ class ModalReact extends React.Component {
     document.getElementById(this.props.toggleButtonId).setAttribute('aria-hidden', true);
 
     return (
-      <div className={this.modalOverlay} style={{ ...this.defaultStyles.overlay, ...customOverlayStyle }}>
+      <div className = {this.modalOverlay} style = {{ ...this.defaultStyles.overlay, ...customOverlayStyle }}>
         <div
-          className={this.modalClassName}
-          id={this.modalDialog}
-          tabIndex="-1"
-          aria-labelledby="modal_overlay_label"
-          aria-hidden={this.state.ariaHidden}
-          onKeyDown={this.handleKeyPress}
-          style={{ ...this.defaultStyles.dialogContent, ...customContentStyle }}>
+          className = {this.modalClassName}
+          id = {this.modalDialog}
+          tabIndex = "-1"
+          aria-labelledby = "modal_overlay_label"
+          aria-hidden = {this.state.ariaHidden}
+          onKeyDown = {this.handleKeyPress}
+          style = {{ ...this.defaultStyles.dialogContent, ...customContentStyle }}>
           
           {/* Modal Header */}
           {this.props.header ? <Header data={this.props.header} aria-labelledby="modal_overlay_header_label" /> : null}
@@ -240,11 +241,11 @@ class ModalReact extends React.Component {
           </button>
         </div>
 
-        <div id="modal_overlay_label" className="hide-labelledBy">Modal window to show the content</div>
-        <div id="modal_overlay_header_label" className="hide-labelledBy">Header of Modal window</div>
-        <div id="modal_overlay_footer_label" className="hide-labelledBy">Footer of Modal window</div>
-        <div id="modal_overlay_body_label" className="hide-labelledBy">Body content of Modal window</div>
-        <div id="modal_overlay_close_label" className="hide-labelledBy">Close the Modal Window</div>
+        <div id="modal_overlay_label" className="hide-labelledBy">{Resources.modal_overlay_label}</div>
+        <div id="modal_overlay_header_label" className="hide-labelledBy">{Resources.modal_overlay_header_label}</div>
+        <div id="modal_overlay_footer_label" className="hide-labelledBy">{Resources.modal_overlay_footer_label}</div>
+        <div id="modal_overlay_body_label" className="hide-labelledBy">{Resources.modal_overlay_body_label}</div>
+        <div id="modal_overlay_close_label" className="hide-labelledBy">{Resources.modal_overlay_close_label}</div>
       </div>
     );
   }
