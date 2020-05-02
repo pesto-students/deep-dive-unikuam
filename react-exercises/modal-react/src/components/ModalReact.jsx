@@ -8,9 +8,9 @@ const KEYCODE_ESC = 27;
 
 class ModalReact extends React.Component {
   modalDialog = 'modalDialog';
-  modalClassName = `modalReact ${this.props.classes && this.props.classes.dialogContent ? this.props.classes.dialogContent: ''}`;
-  modalCloseClass = `modalReactClose ${this.props.classes && this.props.classes.modalClose ? this.props.classes.modalClose: ''}`;
-  modalOverlay = `modalOverlay ${this.props.classes && this.props.classes.overlay ? this.props.classes.overlay: ''}`;
+  modalClassName = `${this.props.classes && this.props.classes.dialogContent ? 'modalReact ' + this.props.classes.dialogContent : 'modalReact'}`;
+  modalCloseClass = `${this.props.classes && this.props.classes.modalClose ? 'modalReactClose ' + this.props.classes.modalClose: 'modalReactClose'}`;
+  modalOverlay = `${this.props.classes && this.props.classes.overlay ? 'modalOverlay ' + this.props.classes.overlay: 'modalOverlay'}`;
 
   state = {
     close: false,
@@ -18,8 +18,22 @@ class ModalReact extends React.Component {
     afterCloseShow: true
   }
 
+  defaultPropValues = {
+    focusOnFirstElement: true,
+    focusOnParticularField: 1,
+    closeOnEscape: true,
+    focusChangeOnTab: true,
+    hideOnOverlayTouch: true,
+    shouldReturnFocusInitialBtnAfterClose: true,
+    showPopupAgainAfter: false,
+  }
+
   componentDidMount() {
-    document.getElementById(this.props.toggleButtonId).addEventListener('click', this.toggleModal);
+    if (!this.props.toggleButtonId) {
+      throw new Error(`Button Id is required to show the modal, please provide a valid id in string format.`);
+    } else {
+      document.getElementById(this.props.toggleButtonId).addEventListener('click', this.toggleModal);
+    }
   }
 
   componentWillUnmount() {
@@ -27,23 +41,29 @@ class ModalReact extends React.Component {
   }
 
   componentDidUpdate() {
-    if (this.props.showPopupAgainAfter && !this.state.close && this.state.afterCloseShow) {
-      const showTime = this.props.showPopupAgainAfter;
-      if (!Number.isFinite(showTime)) {
-        throw new Error(`Expected the finite number for showPopupAgainAfter attribute, got invalid`);
-      }
-      setTimeout(() => {
-        this.closeModal();
-      }, showTime);
-      this.setState({ afterCloseShow: false });
+    const showPopupAgainAfter = this.props.showPopupAgainAfter ? this.props.showPopupAgainAfter : this.defaultPropValues.showPopupAgainAfter;
+    const focusOnFirstElement = this.props.focusOnFirstElement ? this.props.focusOnFirstElement : this.defaultPropValues.focusOnFirstElement;
+    const focusOnParticularField = this.props.focusOnParticularField ? this.props.focusOnParticularField : this.defaultPropValues.focusOnParticularField;
+    if (showPopupAgainAfter && !this.state.close && this.state.afterCloseShow) {
+      this.showAfterParticularTime(showPopupAgainAfter);
     }
-    if (this.props.focusOnFirstElement && this.state.close) {
+    if (focusOnFirstElement && this.state.close) {
       this.getFocusableElements()[0].focus();
     }
-    if (this.props.focusOnParticularField && this.state.close) {
-      this.focusOnParticularField();
+    if (focusOnParticularField && this.state.close) {
+      this.focusOnParticularField(focusOnParticularField);
     }
     this.addTabIndexAttribute();
+  }
+
+  showAfterParticularTime = (showTime) => {
+    if (!Number.isFinite(showTime)) {
+      throw new Error(`Expected the finite number for showPopupAgainAfter attribute, got invalid`);
+    }
+    setTimeout(() => {
+      this.closeModal();
+    }, showTime);
+    this.setState({ afterCloseShow: false });
   }
 
   addTabIndexAttribute = () => {
@@ -55,13 +75,12 @@ class ModalReact extends React.Component {
     }
   }
 
-  focusOnParticularField = () => {
-    const tabIndex = this.props.focusOnParticularField - 1;
+  focusOnParticularField = (tabIndex) => {
     const focusable = this.getFocusableElements();
     if (tabIndex > focusable.length) {
       throw new Error(`Provided index for default focus is greater than the number of available focusable elements. It should be equal or less than ${focusable.length}`);
     }
-    focusable[tabIndex].focus();
+    focusable[tabIndex - 1].focus();
   }
 
   getFocusableElements = () => {
@@ -79,7 +98,8 @@ class ModalReact extends React.Component {
   }
 
   closeModal = () => {
-    if (this.props.shouldReturnFocusInitialBtnAfterClose) {
+    const shouldReturnFocusInitialBtnAfterClose = this.props.shouldReturnFocusInitialBtnAfterClose ? this.props.shouldReturnFocusInitialBtnAfterClose : this.defaultPropValues.shouldReturnFocusInitialBtnAfterClose;
+    if (shouldReturnFocusInitialBtnAfterClose) {
         document.getElementById(this.props.toggleButtonId).focus();
     }
     this.setState(() => ({
@@ -89,20 +109,22 @@ class ModalReact extends React.Component {
   }
 
   handleKeyPress = (event) => {
+    const focusChangeOnTab = this.props.focusChangeOnTab ? this.props.focusChangeOnTab : this.defaultPropValues.focusChangeOnTab;
+    const closeOnEscape = this.props.closeOnEscape ? this.props.closeOnEscape : this.defaultPropValues.closeOnEscape;
     const isTabPressed = (event.key === 'Tab' || event.keyCode === KEYCODE_TAB);
-    if (isTabPressed && this.props.focusChangeOnTab) {
+    if (isTabPressed && focusChangeOnTab) {
       const focusable = this.getFocusableElements();
       if (event.shiftKey) {
         if (document.activeElement === focusable[0]) {
-          focusable[focusable.length - 1].focus();
+          focusable[focusable.length - 1].focus(); //shift + tab
         }
       } else {
         if (document.activeElement === focusable[focusable.length - 1]) {
-          setTimeout(() => focusable[0].focus(), 100);
+          setTimeout(() => focusable[0].focus(), 100); //tab
         }
       }
     }
-    if ((event.key === "Escape" || event.keyCode === KEYCODE_ESC) && this.props.closeOnEscape) {
+    if ((event.key === "Escape" || event.keyCode === KEYCODE_ESC) && closeOnEscape) {
        this.closeModal();
     }
   }

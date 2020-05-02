@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import ModalReact from './components/ModalReact.jsx';
 
 function App() {
+  const [firstname, setFirstName] = useState('anshul');
+  const [lastname, setLastname] = useState('anshul');
   const handleChange = () => {
-
+    setFirstName(firstname);
   }
   const handleBeforeOpen = () => {
     console.log('open');
@@ -52,9 +54,9 @@ function App() {
         }
         >
         <label>First Name: </label>
-        <input type="text" name="firstname" value="" onChange={(e) => this.handleChange(e)}/>
+        <input type="text" name="firstname" value={firstname}/>
         <label>Last Name: </label>
-        <input type="text" name="lastname" value="" onChange={(e) => this.handleChange(e)}/>
+        <input type="text" name="lastname" value={lastname}/>
         <a href="google.com"> click here </a>
         <button >submit</button>
       </ModalReact>
