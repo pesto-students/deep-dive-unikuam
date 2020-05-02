@@ -1,21 +1,23 @@
 import React from 'react';
-import './ModalReactStyles.css';
+import '../css/ModalReactStyles.css';
 import PropTypes from "prop-types";
 import Header from './Header';
 import Footer from './Footer';
+
 const KEYCODE_TAB = 9;
 const KEYCODE_ESC = 27;
 
 class ModalReact extends React.Component {
+
   modalDialog = 'modalDialog';
   modalClassName = `${this.props.classes && this.props.classes.dialogContent ? 'modalReact ' + this.props.classes.dialogContent : 'modalReact'}`;
-  modalCloseClass = `${this.props.classes && this.props.classes.modalClose ? 'modalReactClose ' + this.props.classes.modalClose: 'modalReactClose'}`;
-  modalOverlay = `${this.props.classes && this.props.classes.overlay ? 'modalOverlay ' + this.props.classes.overlay: 'modalOverlay'}`;
+  modalCloseClass = `${this.props.classes && this.props.classes.modalClose ? 'modalReactClose ' + this.props.classes.modalClose : 'modalReactClose'}`;
+  modalOverlay = `${this.props.classes && this.props.classes.overlay ? 'modalOverlay ' + this.props.classes.overlay : 'modalOverlay'}`;
 
   state = {
-    close: false,
-    toggleStatus: false,
-    afterCloseShow: true
+    isModalOpen: false,
+    shouldModalShowAfterClose: true,
+    ariaHidden: false
   }
 
   defaultPropValues = {
@@ -41,16 +43,17 @@ class ModalReact extends React.Component {
   }
 
   componentDidUpdate() {
-    const showPopupAgainAfter = this.props.showPopupAgainAfter ? this.props.showPopupAgainAfter : this.defaultPropValues.showPopupAgainAfter;
-    const focusOnFirstElement = this.props.focusOnFirstElement ? this.props.focusOnFirstElement : this.defaultPropValues.focusOnFirstElement;
-    const focusOnParticularField = this.props.focusOnParticularField ? this.props.focusOnParticularField : this.defaultPropValues.focusOnParticularField;
-    if (showPopupAgainAfter && !this.state.close && this.state.afterCloseShow) {
+    const showPopupAgainAfter = typeof this.props.showPopupAgainAfter !== undefined ? this.props.showPopupAgainAfter : this.defaultPropValues.showPopupAgainAfter;
+    const focusOnFirstElement = typeof this.props.focusOnFirstElement !== undefined ? this.props.focusOnFirstElement : this.defaultPropValues.focusOnFirstElement;
+    const focusOnParticularField = typeof this.props.focusOnParticularField !== undefined ? this.props.focusOnParticularField : this.defaultPropValues.focusOnParticularField;
+
+    if (showPopupAgainAfter && !this.state.isModalOpen && this.state.shouldModalShowAfterClose) {
       this.showAfterParticularTime(showPopupAgainAfter);
     }
-    if (focusOnFirstElement && this.state.close) {
+    if (focusOnFirstElement && this.state.isModalOpen) {
       this.getFocusableElements()[0].focus();
     }
-    if (focusOnParticularField && this.state.close) {
+    if (focusOnParticularField && this.state.isModalOpen) {
       this.focusOnParticularField(focusOnParticularField);
     }
     this.addTabIndexAttribute();
@@ -63,20 +66,22 @@ class ModalReact extends React.Component {
     setTimeout(() => {
       this.closeModal();
     }, showTime);
-    this.setState({ afterCloseShow: false });
+
+    this.setState({ shouldModalShowAfterClose: false });
   }
 
   addTabIndexAttribute = () => {
     const focusable = this.getFocusableElements();
-    let i = 1;
+    let tabIndex = 1;
     for (const element of focusable) {
-      element.setAttribute('tabIndex', i);
-      i++;
+      element.setAttribute('tabIndex', tabIndex);
+      tabIndex++;
     }
   }
 
   focusOnParticularField = (tabIndex) => {
     const focusable = this.getFocusableElements();
+
     if (tabIndex > focusable.length) {
       throw new Error(`Provided index for default focus is greater than the number of available focusable elements. It should be equal or less than ${focusable.length}`);
     }
@@ -91,41 +96,42 @@ class ModalReact extends React.Component {
 
   toggleModal = () => {
     this.setState(() => ({
-      toggleStatus: !this.state.toggleStatus,
-      close: !this.state.close,
-      afterCloseShow: true
+      isModalOpen: !this.state.isModalOpen,
+      shouldModalShowAfterClose: true
     }));
   }
 
   closeModal = () => {
-    const shouldReturnFocusInitialBtnAfterClose = this.props.shouldReturnFocusInitialBtnAfterClose ? this.props.shouldReturnFocusInitialBtnAfterClose : this.defaultPropValues.shouldReturnFocusInitialBtnAfterClose;
-    if (shouldReturnFocusInitialBtnAfterClose) {
-        document.getElementById(this.props.toggleButtonId).focus();
+    const retainFocusToElement = typeof this.props.shouldReturnFocusInitialBtnAfterClose !== undefined ? this.props.shouldReturnFocusInitialBtnAfterClose : this.defaultPropValues.shouldReturnFocusInitialBtnAfterClose;
+    if (retainFocusToElement) {
+      document.getElementById(this.props.toggleButtonId).focus();
     }
     this.setState(() => ({
-      toggleStatus: !this.state.toggleStatus,
-      close: !this.state.close
+      isModalOpen: !this.state.isModalOpen
     }));
+    document.getElementById(this.props.toggleButtonId).setAttribute('aria-hidden', false);
   }
 
   handleKeyPress = (event) => {
-    const focusChangeOnTab = this.props.focusChangeOnTab ? this.props.focusChangeOnTab : this.defaultPropValues.focusChangeOnTab;
-    const closeOnEscape = this.props.closeOnEscape ? this.props.closeOnEscape : this.defaultPropValues.closeOnEscape;
+    const focusChangeOnTab = typeof this.props.focusChangeOnTab !== undefined ? this.props.focusChangeOnTab : this.defaultPropValues.focusChangeOnTab;
+    const closeOnEscape = typeof this.props.closeOnEscape !== undefined ? this.props.closeOnEscape : this.defaultPropValues.closeOnEscape;
     const isTabPressed = (event.key === 'Tab' || event.keyCode === KEYCODE_TAB);
+
     if (isTabPressed && focusChangeOnTab) {
       const focusable = this.getFocusableElements();
+
       if (event.shiftKey) {
         if (document.activeElement === focusable[0]) {
-          focusable[focusable.length - 1].focus(); //shift + tab
+          focusable[focusable.length - 1].focus();
         }
       } else {
         if (document.activeElement === focusable[focusable.length - 1]) {
-          setTimeout(() => focusable[0].focus(), 100); //tab
+          setTimeout(() => focusable[0].focus(), 100);
         }
       }
     }
     if ((event.key === "Escape" || event.keyCode === KEYCODE_ESC) && closeOnEscape) {
-       this.closeModal();
+      this.closeModal();
     }
   }
 
@@ -155,7 +161,6 @@ class ModalReact extends React.Component {
       overflowY: 'auto',
     },
     dialogContent: {
-      // width: '100%',
       background: '#fff',
       boxShadow: '0, 0, 0.625rem, rgba(0, 0, 0, 0.2)',
       position: 'relative',
@@ -165,17 +170,17 @@ class ModalReact extends React.Component {
     },
     modalClose: {
       position: 'absolute',
-       zIndex: 1,
-       top: 0,
-       right: 0,
-       backgroundColor: '#34363a',
-       width: '2.5rem',
-       height: '2.5rem',
-       padding: 0,
-       border: 0,
-       cursor: 'pointer',
-       outline: 0,
-       boxShadow: '0, 0, 0.625rem, rgba(0, 0, 0, 0.1)',
+      zIndex: 1,
+      top: 0,
+      right: 0,
+      backgroundColor: '#34363a',
+      width: '2.5rem',
+      height: '2.5rem',
+      padding: 0,
+      border: 0,
+      cursor: 'pointer',
+      outline: 0,
+      boxShadow: '0, 0, 0.625rem, rgba(0, 0, 0, 0.1)',
     }
   }
 
@@ -183,12 +188,13 @@ class ModalReact extends React.Component {
     let customOverlayStyle = null;
     let customContentStyle = null;
     let customCloseStyle = null;
+
     if (this.props.customStyle) {
       customOverlayStyle = this.props.customStyle.overlay ? this.props.customStyle.overlay : null;
       customContentStyle = this.props.customStyle.dialogContent ? this.props.customStyle.dialogContent : null;
       customCloseStyle = this.props.customStyle.modalClose ? this.props.customStyle.modalClose : null;
     }
-    if (!this.state.toggleStatus && !this.state.close) {
+    if (!this.state.isModalOpen) {
       if (this.props.afterModalClose) {
         this.props.afterModalClose();
       }
@@ -200,25 +206,45 @@ class ModalReact extends React.Component {
     if (this.props.beforeModalOpen) {
       this.props.beforeModalOpen();
     }
+
+    document.getElementById(this.props.toggleButtonId).setAttribute('aria-hidden', true);
+
     return (
-      <div className={this.modalOverlay} style={{ ...this.defaultStyles.overlay, ...customOverlayStyle}}>
-          <div
-            className={this.modalClassName}
-            id={this.modalDialog}
-            tabIndex="-1"
-            onKeyDown={this.handleKeyPress}
-            style={{ ...this.defaultStyles.dialogContent, ...customContentStyle}}>
-              {this.props.header ? <Header data={this.props.header} /> : null}
-              <div className="modalBody">
-                {this.props.children}
-              </div>
-              {this.props.footer ? <Footer data={this.props.footer} /> : null}
-              <button
-                className={this.modalCloseClass}
-                onClick={(event) => this.closeModal(event)}
-                style={{ ...this.defaultStyles.modalClose, ...customCloseStyle}}>
-              </button>
+      <div className={this.modalOverlay} style={{ ...this.defaultStyles.overlay, ...customOverlayStyle }}>
+        <div
+          className={this.modalClassName}
+          id={this.modalDialog}
+          tabIndex="-1"
+          aria-labelledby="modal_overlay_label"
+          aria-hidden={this.state.ariaHidden}
+          onKeyDown={this.handleKeyPress}
+          style={{ ...this.defaultStyles.dialogContent, ...customContentStyle }}>
+          
+          {/* Modal Header */}
+          {this.props.header ? <Header data={this.props.header} aria-labelledby="modal_overlay_header_label" /> : null}
+          
+          {/* Modal Body Content */}
+          <div className="modalBody" aria-labelledby="modal_overlay_body_label">
+            {this.props.children}
           </div>
+          
+          {/* Modal Footer */}
+          {this.props.footer ? <Footer data={this.props.footer} aria-labelledby="modal_overlay_footer_label" /> : null}
+          
+          {/* Modal Close Icon */}
+          <button
+            className={this.modalCloseClass}
+            onClick={(event) => this.closeModal(event)}
+            aria-labelledby="modal_overlay_close_label"
+            style={{ ...this.defaultStyles.modalClose, ...customCloseStyle }}>
+          </button>
+        </div>
+
+        <div id="modal_overlay_label" className="hide-labelledBy">Modal window to show the content</div>
+        <div id="modal_overlay_header_label" className="hide-labelledBy">Header of Modal window</div>
+        <div id="modal_overlay_footer_label" className="hide-labelledBy">Footer of Modal window</div>
+        <div id="modal_overlay_body_label" className="hide-labelledBy">Body content of Modal window</div>
+        <div id="modal_overlay_close_label" className="hide-labelledBy">Close the Modal Window</div>
       </div>
     );
   }
