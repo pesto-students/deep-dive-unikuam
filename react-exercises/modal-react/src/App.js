@@ -4,8 +4,12 @@ import ModalReact from './components/jsx/ModalReact.jsx';
 function App() {
 
   const handleChange = () => {}
-  const handleBeforeOpen = () => {}
-  const handleBeforeClose = () => {}
+  const handleBeforeOpen = () => {
+    console.log('open');
+  }
+  const handleBeforeClose = () => {
+    console.log('close');
+  }
 
   return (
     <div>
