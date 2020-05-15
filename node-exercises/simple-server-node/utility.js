@@ -1,30 +1,43 @@
-const { URL } = require('url');
-// routePath: /users/:userId/books/:bookId
-// requestedUrl: /users/1/books/2
+const COLON_REGEX = /:/g;
+const SLASH_REGEX = /^\/+|\/+$/g;
 
-function parseUrl(routePath, requestedUrl) {
-  let params = {};
-  let splittedRoutes = routePath.split('/');
-  let splittedUrls = requestedUrl.split('/');
-  let urlParams = getParamsUrl(splittedRoutes, splittedUrls);
-  return urlParams;
-}
+class UrlUtility {
+  parseUrl = (routePath, requestedUrl) => {
+    let splittedRoutes = routePath.replace(SLASH_REGEX, '').split('/');
+    let splittedUrls = requestedUrl.replace(SLASH_REGEX, '').split('/');
+    return this.getParamsUrl(splittedRoutes, splittedUrls);
+  }
 
-function getParamsUrl(splittedRoutes, splittedUrls) {
+  getParamsUrl = (splittedRoutes, splittedUrls) => {
     let temp = [];
-    var params = {};
+    let params = {};
     for (const splittedRoute of splittedRoutes) {
-        temp[splittedRoute] = true;
+      temp[splittedRoute] = true;
     }
     for (const splittedUrl of splittedUrls) {
-        if (temp[splittedUrl]) {
-          delete temp[splittedUrl];
-        } else {
-            let key = splittedRoutes[splittedUrls.indexOf(splittedUrl)].replace(/:/g, '');
-            params[key] = splittedUrl;
-        }
+      if (temp[splittedUrl]) {
+        delete temp[splittedUrl];
+      } else {
+        let key = splittedRoutes[splittedUrls.indexOf(splittedUrl)].replace(COLON_REGEX, '');
+        params[key] = splittedUrl;
+      }
     }
     return params;
+  }
+
+  matchRequestUrls = (routePath, requestedUrl) => {
+    let splittedRoutePath = routePath.replace(SLASH_REGEX, '').split('/');
+    let splittedRequestedUrl = requestedUrl.replace(SLASH_REGEX, '').split('/');
+    for (const routeComp of splittedRoutePath) {
+      const index = splittedRoutePath.indexOf(routeComp);
+      if ((splittedRequestedUrl[index] !== routeComp &&
+          routeComp.indexOf(':') === -1) || splittedRequestedUrl === "") {
+        return false;
+      }
+    }
+    return true;
+  }
 }
 
-module.exports = { parseUrl };
+
+module.exports = new UrlUtility();
