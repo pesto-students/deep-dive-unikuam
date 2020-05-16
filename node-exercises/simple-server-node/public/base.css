@@ -1,0 +1,23 @@
+* {
+  margin: 0px;
+  padding: 0px;
+}
+h1 {
+  color: #222;
+  font-size: 20px;
+  text-transform: uppercase;
+  text-align: center;
+  margin-top: 10px;
+}
+
+img {
+  width: 200px;
+  height: 100px;
+  margin: 20px auto;
+  display: block;
+}
+
+.class404 {
+  background-color: rgb(177, 31, 31);
+  color: #fff;
+}
