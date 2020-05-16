@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const rootPath = __dirname;
 
-const server = http.createServer((req, res) => {
+const toCheckExtensionAndReadStaticFiles = (req, res) => {
   const filePath = path.join(rootPath, "public", req.url);
   if (req.url === "" || req.url === "/" || req.url.match("index.html$")) {
     fs.readFile("./public/index.html", "utf-8", (err, html) => {
@@ -39,6 +39,10 @@ const server = http.createServer((req, res) => {
     res.writeHead(404, { "Content-Type": "text/html" });
     res.end("No page found");
   }
+};
+
+const server = http.createServer((req, res) => {
+  toCheckExtensionAndReadStaticFiles(req, res);
 });
 
 server.listen(4000);
