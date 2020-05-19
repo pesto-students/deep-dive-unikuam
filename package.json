@@ -8,7 +8,8 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "download": "pesto download -e "
+    "download": "pesto download -e ",
+    "start": "nodemon index.js"
   },
   "keywords": [],
   "author": "",
