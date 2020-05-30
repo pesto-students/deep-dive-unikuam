@@ -6,12 +6,14 @@ require('dotenv').config();
 const app = express();
 const dbConnectUrl = process.env.DB_CONNECT;
 
-
-MongoClient.connect(dbConnectUrl, { useNewUrlParser: true })
+MongoClient.connect(dbConnectUrl, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
   .then((client) => {
     console.log('db is connected ');
     const db = client.db('todo-app');
-    const todoListCollection = db.collection('todo-list');
+    const Collection = db.collection('todo-list');
     // app.use()
     // app.get(/* ... */)
     // app.post(/* ... */)
