@@ -20,7 +20,7 @@ Try to use ES6 (and above) features as much as possible.
   - You can use `express` as a server. Or better yet, you can use your own `simple-server` lib developed in Week 3 to serve your application.
   - The frontend has to be in `React`.
 - The application should have:
-  - A login/logout flow.
+  - A login/logout flow. 
   - Save the user's complete todo history and show them day-wise (or any other criteria)
     - Save the time of completion of each todo etc.
   - Show a graph of number of todos created vs number of todos completed on a weekly/biweekly/monthly basis.
