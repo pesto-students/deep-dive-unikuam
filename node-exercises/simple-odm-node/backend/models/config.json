@@ -1,0 +1,5 @@
+{
+  "dbConnectUrl": "mongodb+srv://dbAdmin:SfM4v54xUXbTyqlU@cluster0-balwo.mongodb.net/test?retryWrites=true&w=majority",
+  "dbName": "todo-app",
+  "port": 3001
+}
