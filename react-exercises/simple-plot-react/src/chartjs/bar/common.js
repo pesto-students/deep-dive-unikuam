@@ -1,0 +1,13 @@
+export const CWIDTH = 500;
+export const CHEIGHT = 500;
+export const DBARWIDTH = 50;
+export const DBARHEIGHT = 75;
+export const DSTARTPOINT = 50;
+export const LINEGAP = 50;
+export const VERTICALH = (CHEIGHT - 2 * LINEGAP);
+export const HORIZONH = (CWIDTH - 2 * LINEGAP);
+export const MARKERW = 6;
+export const MARKERH = 1;
+export const BARMARGIN = 5;
+export const TWIDTH = 60;
+export const THEIGHT = 30;
