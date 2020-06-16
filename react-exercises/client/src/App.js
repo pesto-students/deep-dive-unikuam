@@ -14,29 +14,34 @@ let ws = new WebSocket('ws://localhost:3001');
 const SPEED_FACTOR = 1;
 const SNAKE_CANVAS = { width: BOX_SIZE * BOX_SIZE, height: BOX_SIZE * BOX_SIZE };
 const SCORE_INCREASE_FACTOR = 10;
+const CURRENT_PLAYER = '1';
+const BUDDY = '2';
 
 class App extends Component {
   constructor() {
     super();
-    this.clientId = null
+    this.currentPlayer = null //current player
+    this.buddy = null //buddy player
+    this.gameConnectionId = null
     this.counterId = ''
     this.state = {
+      [this.currentPlayer]: {
+        currentDirection: '',
+        score: 0,
+        defaultSnakeCoordinate: [],
+        isGameOver: false,
+      },
+      [this.buddy]: {
+        currentDirection: '',
+        score: 0,
+        defaultSnakeCoordinate: [],
+        isGameOver: false,
+      },
       snakeCanvasObj: null,
-      currentDirection: '',
-      score: 0,
-      defaultSnakeCoordinate: [],
       foodCoordinate: {x: generateRandom() - BOX_SIZE, y: generateRandom() - BOX_SIZE},
-      isGameOver: false,
       alone: true,
       availableClients: [],
-      gameConnectionId: null,
-      player: ''
     }
-  }
-
-  handleJoinClick = (clientId) => {
-    console.log(clientId, this.clientId);
-    ws.send(JSON.stringify({ method: "sendRequest", to: clientId, from: this.clientId }))
   }
 
   /* Fuction defined to initialize the snake components after sucessfully mounting to actual DOM */
@@ -46,14 +51,23 @@ class App extends Component {
       console.log(response);
       //when any client connects first time then this registers it as an active client in server
       if (response.method === 'connect') {
-        this.clientId = response.clientId;
-        console.log(`A new client connected ${response.clientId}`);
+        this.currentPlayer = response.currentPlayer;
+        this.setState({
+          [this.currentPlayer] : {
+            currentDirection: '',
+            score: 0,
+            defaultSnakeCoordinate: [],
+            isGameOver: false,
+          }
+        }, () => {
+          this.initSnakeGame();
+        })
+        console.log(`A new client connected ${response.currentPlayer}`);
       }
 
       //when clicks on play button then request is sent to server for checking if anyone is available or not for playing
       if (response.method === 'create') {
         if (response.available) {
-          console.log(response.availableClients)
           //set all available clients
           this.setState({ availableClients: response.availableClients})
         } else {
@@ -62,37 +76,63 @@ class App extends Component {
       }
 
       if (response.method === 'sendRequest') {
-        console.log(response);
         // eslint-disable-next-line no-restricted-globals
         if (confirm(`${response.reqSentBy} wants to play with you. Do you want to play?`)) {
-          this.setState({ player: response.reqSentBy, alone: false }, () => {
-            ws.send(JSON.stringify({ method: "requestResult", clientId: this.clientId, from: response.reqSentBy, accepted: true }));
-          })
+          this.buddy = response.reqSentBy;
+          this.setState({
+            [this.buddy] : {
+              currentDirection: '',
+              score: 0,
+              defaultSnakeCoordinate: [],
+              isGameOver: false,
+            },
+            alone: false
+          }, () => {
+            this.initSnakeGame();
+            ws.send(JSON.stringify({ method: "requestResult", currentPlayer: this.currentPlayer, from: response.reqSentBy, accepted: true }));
+          });
         } else {
-          ws.send(JSON.stringify({ method: "requestResult", clientId: this.clientId, from: response.reqSentBy, accepted: false }))
+          ws.send(JSON.stringify({ method: "requestResult", currentPlayer: this.currentPlayer, from: response.reqSentBy, accepted: false }))
         }
       }
 
       if (response.method === 'requestResult') {
         if (response.accepted) {
-          this.setState({ player: response.player, alone: false, availableClients: [], gameConnectionId: response.gameId }, () => {
-            alert(`${response.player} has accepted your request. Press play to begin.`);
+          this.buddy = response.buddy;
+          this.gameConnectionId = response.gameId;
+          this.setState({
+            alone: false,
+            availableClients: [],
+            [this.buddy] : {
+              currentDirection: '',
+              score: 0,
+              defaultSnakeCoordinate: [],
+              isGameOver: false,
+            }}, () => {
+              this.initSnakeGame();
+              alert(`${response.buddy} has accepted your request. Press play to begin.`);
           })
         } else {
-          this.setState({ player: "", gameConnectionId: null, alone: true }, () => {
-            alert(`${response.player} has declined your request.`);
+          this.buddy = "";
+          this.gameConnectionId = null;
+          this.setState({ alone: true }, () => {
+            alert(`${response.buddy} has declined your request.`);
           })
         }
       }
 
       if (response.method === 'setBuddyState') {
-        this.setState({
-          defaultSnakeCoordinate: response.state.defaultSnakeCoordinate,
-          score: response.state.score,
-          currentDirection: response.state.currentDirection,
-          foodCoordinate: response.state.foodCoordinate,
-          isGameOver: response.state.isGameOver
-        })
+        console.log('setBuddyState', response);
+        this.setState((prevState) => ({
+          [response.buddy] : {
+            ...prevState[response.buddy],
+            defaultSnakeCoordinate: response.state.defaultSnakeCoordinate,
+            score: response.state.score,
+            currentDirection: response.state.currentDirection,
+            isGameOver: response.state.isGameOver
+          },
+          foodCoordinate: response.foodCoordinate
+        }))
       }
     }
     this.initSnakeGame();
@@ -102,7 +142,7 @@ class App extends Component {
   handlePlay = () => {
     const payLoad = {
       method: "create",
-      clientId: this.clientId
+      currentPlayer: this.currentPlayer
     }
     ws.send(JSON.stringify(payLoad));
     // if no one is around to play then dont start the game
@@ -115,10 +155,13 @@ class App extends Component {
   /* Fuction defined to start the movement of snake once clicking on Play button */
   moveTheSnake = () => {
     this.setState((state) => {
-      const directionData = getDirectionData(state);
+      const directionData = getDirectionData(state, this.currentPlayer, this.buddy);
       return {
-          [directionData.directionType]: directionData.directionMove,
-          defaultSnakeCoordinate: directionData.snakeCordinateArray
+          [this.currentPlayer] : {
+            ...state[this.currentPlayer],
+            [directionData.directionType]: directionData.directionMove,
+            defaultSnakeCoordinate: directionData.snakeCordinateArray
+          }
       }
     }, () => {
       clearCanvas(SNAKE_CANVAS);
@@ -126,14 +169,19 @@ class App extends Component {
       this.drawFood();
       this.drawSnake(this.state.snakeCanvasObj);
       ws.send(JSON.stringify({ method: 'setStateForCurrentUser',
-       currentState: this.state,
-       gameId: this.state.gameConnectionId,
-       clientId: this.clientId,
-       player: this.state.player
+       currentState: this.state[this.currentPlayer],
+       gameId: this.gameConnectionId,
+       currentPlayer: this.currentPlayer,
+       buddy: this.buddy,
+       foodCoordinate: this.state.foodCoordinate
       }))
-      if (checkIfGameOver(this.state.defaultSnakeCoordinate, SNAKE_CANVAS)) {
+      if (checkIfGameOver(this.state[this.currentPlayer].defaultSnakeCoordinate, SNAKE_CANVAS)) {
         this.processGameEnd();
-        ws.send(JSON.stringify({ method: 'setGameOverForCurrentUser', gameId: this.state.gameConnectionId, clientId: this.clientId }));
+        ws.send(JSON.stringify({ method: 'setGameOverForCurrentUser',
+         gameId: this.gameConnectionId,
+         currentPlayer: this.currentPlayer,
+         buddy: this.buddy
+        }));
         return false;
       }
     });
@@ -145,10 +193,19 @@ class App extends Component {
     let snakeCanvas = snakeCanvasObject.getContext("2d"); // get canvas object
     this.setState(
       {
-        snakeCanvasObj: snakeCanvas,
-        defaultSnakeCoordinate: setDefaultSnakeCoordinates(),
-        currentDirection: DEFAULT_SNAKE_DIR,
-        score: 0
+        [this.currentPlayer]: {
+          defaultSnakeCoordinate: setDefaultSnakeCoordinates(CURRENT_PLAYER),
+          currentDirection: DEFAULT_SNAKE_DIR,
+          score: 0,
+          isGameOver: false,
+        },
+        [this.buddy]: {
+          defaultSnakeCoordinate: setDefaultSnakeCoordinates(BUDDY),
+          currentDirection: DEFAULT_SNAKE_DIR,
+          score: 0,
+          isGameOver: false,
+        },
+        snakeCanvasObj: snakeCanvas
       }, () => {
         this.drawSnake(snakeCanvas);
       }
@@ -157,18 +214,27 @@ class App extends Component {
 
   /* Fuction defined to create the food if snake has eaten the previous one */
   createFood = () => {
-    let snakeCordinateArray = this.state.defaultSnakeCoordinate;
+    let snakeCordinateArray = this.state[this.currentPlayer].defaultSnakeCoordinate;
+    console.log('createFood', snakeCordinateArray);
     let newLengthCoordinates;
     snakeCordinateArray.forEach((snakeCurrentCoordinate) => {
         if (snakeCurrentCoordinate.x == this.state.foodCoordinate.x && snakeCurrentCoordinate.y == this.state.foodCoordinate.y) {
           playEatingSound();
-          newLengthCoordinates = processSnakeAccordingToDirection(snakeCordinateArray, this.state);
+          newLengthCoordinates = processSnakeAccordingToDirection(snakeCordinateArray, this.state, this.currentPlayer);
           snakeCordinateArray.unshift(newLengthCoordinates);
           this.setState((preState) => {
             return {
+              [this.currentPlayer] : {
+                ...preState[this.currentPlayer],
+                defaultSnakeCoordinate: snakeCordinateArray,
+                score: preState.score + SCORE_INCREASE_FACTOR
+              },
+              [this.buddy] : {
+                ...preState[this.buddy],
+                defaultSnakeCoordinate: snakeCordinateArray,
+                score: preState.score + SCORE_INCREASE_FACTOR
+              },
               foodCoordinate: {x: generateRandom() - BOX_SIZE, y: generateRandom() - BOX_SIZE},
-              defaultSnakeCoordinate: snakeCordinateArray,
-              score: preState.score + SCORE_INCREASE_FACTOR
             }
           });
         }
@@ -177,6 +243,7 @@ class App extends Component {
 
   /* Fuction defined to draw the food on canvas */
   drawFood = () => {
+    console.log(this.state);
     let snakeCanvasObj = this.state.snakeCanvasObj;
     snakeCanvasObj.fillStyle = 'white';
     let foodImageElement = document.getElementById('foodImage');
@@ -185,8 +252,15 @@ class App extends Component {
 
   /* Fuction defined to draw the snake on canvas */
   drawSnake = (snakeCanvas) => {
-    let snakeCordinateArray = this.state.defaultSnakeCoordinate;
+    let snakeCordinateArray = this.state[this.currentPlayer].defaultSnakeCoordinate;
     snakeCordinateArray.forEach((snake) => {
+      snakeCanvas.fillStyle = snake.color;
+      snakeCanvas.strokestyle = 'black'
+      snakeCanvas.fillRect(snake.x, snake.y, BOX_SIZE, BOX_SIZE);
+      snakeCanvas.strokeRect(snake.x, snake.y, BOX_SIZE, BOX_SIZE);
+    });
+    let snakeCordinateBuddyArray = this.state[this.buddy].defaultSnakeCoordinate;
+    snakeCordinateBuddyArray.forEach((snake) => {
       snakeCanvas.fillStyle = snake.color;
       snakeCanvas.strokestyle = 'black'
       snakeCanvas.fillRect(snake.x, snake.y, BOX_SIZE, BOX_SIZE);
@@ -214,7 +288,7 @@ class App extends Component {
         direction = 'down';
         break;
     }
-    this.setState({ currentDirection: direction });
+    this.setState((prevState) => ({ [this.currentPlayer] : { ...prevState[this.currentPlayer], currentDirection: direction } }));
   }
 
   /* Fuction defined to stop the movement of snake once clicking on Pause button */
@@ -243,6 +317,10 @@ class App extends Component {
     this.initSnakeGame();
   }
 
+  handleJoinClick = (currentPlayer) => {
+    ws.send(JSON.stringify({ method: "sendRequest", to: currentPlayer, from: this.currentPlayer }))
+  }
+
   render() {
     return (
       <div className="main-container">
@@ -250,7 +328,7 @@ class App extends Component {
           <Header />
           <AvailableClients
             clients={this.state.availableClients}
-            player={this.state.player}
+            player={this.buddy}
             click={this.handleJoinClick}/>
           <ControlPanel
             snakeControl={this.state}

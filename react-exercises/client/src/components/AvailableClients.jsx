@@ -5,7 +5,7 @@ class AvailableClients extends Component {
     return (
       <div className="avail-user-section">
         {
-          this.props.player === '' && this.props.clients.map((client, index) => <div key={index}>
+          this.props.player === null && this.props.clients.map((client, index) => <div key={index}>
           <span>{client}</span>
             <button
               onClick={() => this.props.click(client)}>

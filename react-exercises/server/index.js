@@ -21,22 +21,22 @@ const websocket = new websocketServer({
 
 websocket.on('request', request => {
   connection = request.accept(null, request.origin);
-  const clientId = cuid();
+  const currentPlayer = cuid();
   connection.on("open", () => {
     console.log('ws open');
   })
   connection.on("close", () => {
-    delete clients[clientId];
+    delete clients[currentPlayer];
     console.log('ws close');
   })
   connection.on("message", message => {
     const result = JSON.parse(message.utf8Data);
     //handle create
     if (result.method === 'create') {
-      const clientId = result.clientId;
+      const currentPlayer = result.currentPlayer;
       let availableClients = [];
-      availableClients = Object.keys(clients).filter(currentClient => currentClient !== clientId);
-      const conn = clients[clientId].connection;
+      availableClients = Object.keys(clients).filter(currentClient => currentClient !== currentPlayer);
+      const conn = clients[currentPlayer].connection;
       if (availableClients.length) {
         conn.send(JSON.stringify({ method: 'create', available: true, availableClients }));
       } else {
@@ -53,9 +53,9 @@ websocket.on('request', request => {
 
     if (result.method === 'requestResult') {
       const from = result.from; //client anshul
-      //result.clientId is player of anshul
+      //result.currentPlayer is player of anshul
       const player1 = from || '';
-      const player2 = result.clientId;
+      const player2 = result.currentPlayer;
       const conn = clients[from].connection;
       const gameId = cuid();
       gameConnection[gameId] = {
@@ -76,37 +76,42 @@ websocket.on('request', request => {
           isGameOver: false
         }
       }
-      conn.send(JSON.stringify({ method: 'requestResult', accepted: result.accepted, player: result.clientId, gameId }));
+      conn.send(JSON.stringify({ method: 'requestResult', accepted: result.accepted, buddy: result.currentPlayer, gameId }));
     }
 
     if (result.method === 'setStateForCurrentUser') {
-      const { currentState, gameId, clientId, player } = result;
+      const { currentState, gameId, currentPlayer, buddy, foodCoordinate } = result;
       gameConnection[gameId] = {
-        [clientId] : {
+        [currentPlayer] : {
           defaultSnakeCoordinate: currentState.defaultSnakeCoordinate,
           score: currentState.score,
           currentDirection: currentState.currentDirection,
-          foodCoordinate: currentState.foodCoordinate,
           left: currentState.left,
           top: currentState.top,
           isGameOver: currentState.isGameOver
         }
       }
-      const conn = clients[player].connection;
-      conn.send(JSON.stringify({ method: 'setBuddyState', state: gameConnection[gameId][clientId] }));
+      const conn = clients[buddy].connection;
+      conn.send(JSON.stringify({ method: 'setBuddyState',
+        state: gameConnection[gameId][currentPlayer],
+        buddy: currentPlayer,
+        foodCoordinate
+      }));
     }
 
     if (result.method === 'setGameOverForCurrentUser') {
-      const { gameId, clientId } = result;
-      gameConnection[gameId][clientId].isGameOver = true;
+      const { gameId, currentPlayer, buddy } = result;
+      gameConnection[gameId][currentPlayer].isGameOver = true;
+      // const conn = clients[buddy].connection;
+      // conn.send(JSON.stringify({ method: 'setGameOver' }));
     }
   })
-  clients[clientId] = {
+  clients[currentPlayer] = {
     connection
   }
   const payload = {
     method: 'connect',
-    clientId
+    currentPlayer
   }
   connection.send(JSON.stringify(payload));
 })
