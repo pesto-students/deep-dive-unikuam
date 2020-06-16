@@ -6,8 +6,8 @@ class Playground extends Component {
       <div className="playground">
         <canvas
           id="snk-canvas"
-          width={this.props.snakeControl.snakeCanvas.width}
-          height={this.props.snakeControl.snakeCanvas.height}>
+          width={this.props.snakeCanvas.width}
+          height={this.props.snakeCanvas.height}>
         </canvas>
       </div>
     );
