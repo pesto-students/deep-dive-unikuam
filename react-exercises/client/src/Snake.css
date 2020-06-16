@@ -1,0 +1,13 @@
+/* #snk-block {
+  width: 30px;
+  height: 30px;
+  border: 1px solid white;
+} */
+
+.snk-circle {
+  height: 15px;
+  width: 15px;
+  background-color: black;
+  /* border-radius: 50%; */
+  display: inline-block;
+}

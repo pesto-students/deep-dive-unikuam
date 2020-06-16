@@ -1,0 +1,75 @@
+.container {
+  /* text-align: center; */
+  background: black;
+  color: white;
+  font-size: 30px;
+  padding: 36px;
+  overflow: hidden;
+}
+
+.header-img {
+  width: 7%;
+  overflow: hidden;
+  vertical-align: middle;
+  margin-right: 20px;
+  margin-bottom: 6px;
+}
+
+.header-title {
+  display: inline-block;
+  font-size: 35px;
+  font-weight: 200;
+  color: black;
+}
+
+.panel-area {
+  overflow: hidden;
+  background-color: black;
+  display: inline-block;
+  margin-left: 10%;
+}
+
+.panel-area .panel-button {
+  float: left;
+  display: block;
+  color: white;
+  text-align: center;
+  padding: 0px 10px;
+  text-decoration: none;
+}
+
+.panel-area button {
+  cursor: pointer;
+}
+
+.panel-area img {
+  width: 38px;
+}
+
+.panel-button span {
+  font-size: 30px;
+}
+
+.panel-row {
+  margin: auto;
+  width: 100%;
+}
+
+.game-message {
+  font-size: 14px;
+}
+
+.playground {
+  /* width: 500px;
+  height: 430px; */
+  border: 1px solid white;
+  float: right;
+  margin-right: 367px;
+  margin-top: 0px;
+}
+
+.header-name {
+  text-align: center;
+  background: antiquewhite;
+  margin: 29px;
+}

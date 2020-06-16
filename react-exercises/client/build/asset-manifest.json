@@ -1,0 +1,25 @@
+{
+  "files": {
+    "main.css": "/static/css/main.483bd3aa.chunk.css",
+    "main.js": "/static/js/main.4157d1ec.chunk.js",
+    "main.js.map": "/static/js/main.4157d1ec.chunk.js.map",
+    "runtime-main.js": "/static/js/runtime-main.597b7f10.js",
+    "runtime-main.js.map": "/static/js/runtime-main.597b7f10.js.map",
+    "static/js/2.c1ea7442.chunk.js": "/static/js/2.c1ea7442.chunk.js",
+    "static/js/2.c1ea7442.chunk.js.map": "/static/js/2.c1ea7442.chunk.js.map",
+    "index.html": "/index.html",
+    "precache-manifest.d1c67a2936668cdc02193d4303f0ede2.js": "/precache-manifest.d1c67a2936668cdc02193d4303f0ede2.js",
+    "service-worker.js": "/service-worker.js",
+    "static/css/main.483bd3aa.chunk.css.map": "/static/css/main.483bd3aa.chunk.css.map",
+    "static/js/2.c1ea7442.chunk.js.LICENSE.txt": "/static/js/2.c1ea7442.chunk.js.LICENSE.txt",
+    "static/media/eatingSound.mp3": "/static/media/eatingSound.0546a2ba.mp3",
+    "static/media/gameOver.wav": "/static/media/gameOver.a0e8feea.wav",
+    "static/media/replay-icon.png": "/static/media/replay-icon.3fe6d8ca.png"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.597b7f10.js",
+    "static/js/2.c1ea7442.chunk.js",
+    "static/css/main.483bd3aa.chunk.css",
+    "static/js/main.4157d1ec.chunk.js"
+  ]
+}
